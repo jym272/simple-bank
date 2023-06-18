@@ -26,6 +26,11 @@ func (c *Connection) DeleteAccountTable() {
 		panic("cannot delete accounts table: " + err.Error())
 	}
 }
+
+func (c *Connection) GetConnection() *sql.DB {
+	return c.conn
+}
+
 func TestMain(m *testing.M) {
 	conn, err := sql.Open(dbDriver, dbSource)
 	if err != nil {

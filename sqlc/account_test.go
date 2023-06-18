@@ -8,8 +8,26 @@ import (
 	"testing"
 )
 
-type AccountSuite struct {
+type Suite struct {
 	suite.Suite
+}
+
+func (s *Suite) createRandomAccount() (*Account, *CreateAccountParams) {
+	randomArgs := CreateAccountParams{
+		Owner:    utils.RandomOwner(),
+		Balance:  utils.RandomMoney(),
+		Currency: utils.RandomCurrency(),
+	}
+
+	account, err := testQueries.CreateAccount(context.Background(), randomArgs)
+	s.Require().NoError(err)
+	s.Require().NotEmpty(account)
+
+	return &account, &randomArgs
+}
+
+type AccountSuite struct {
+	Suite
 }
 
 //func (s *AccountSuite) SetupSuite() {
@@ -46,20 +64,6 @@ func (s *AccountSuite) TestCreateAccount() {
 	s.Equal(randomArgs.Currency, account.Currency)
 	s.NotZero(account.ID)
 	s.NotZero(account.CreatedAt)
-}
-
-func (s *AccountSuite) createRandomAccount() (*Account, *CreateAccountParams) {
-	randomArgs := CreateAccountParams{
-		Owner:    utils.RandomOwner(),
-		Balance:  utils.RandomMoney(),
-		Currency: utils.RandomCurrency(),
-	}
-
-	account, err := testQueries.CreateAccount(context.Background(), randomArgs)
-	s.Require().NoError(err)
-	s.Require().NotEmpty(account)
-
-	return &account, &randomArgs
 }
 
 func (s *AccountSuite) TestUpdateAccount() {
