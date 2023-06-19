@@ -47,6 +47,8 @@ type TransferTxResult struct {
 	ToEntry     Entry    `json:"to_entry"`
 }
 
+var txKey = struct{}{}
+
 // Perform a money transfer between two accounts. The `amount` value must be positive,
 // and the `from_account_id` must have sufficient funds to complete the transfer.
 // This function returns the newly-created transfer as well as the updated
@@ -56,6 +58,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 	var result TransferTxResult
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
+
 		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
 			FromAccountID: arg.FromAccountID,
 			ToAccountID:   arg.ToAccountID,
@@ -80,7 +83,49 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		if err != nil {
 			return err
 		}
-		// TODO: update accounts' balance
+
+		//accountA, err := q.GetAccountForUpdate(ctx, arg.FromAccountID)
+		//if err != nil {
+		//	return err
+		//}
+		//
+		//result.FromAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
+		//	ID:      arg.FromAccountID,
+		//	Balance: accountA.Balance - arg.Amount,
+		//})
+		//if err != nil {
+		//	return err
+		//}
+
+		result.FromAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+			Amount: -arg.Amount,
+			ID:     arg.FromAccountID,
+		})
+		if err != nil {
+			return err
+		}
+
+		//accountB, err := q.GetAccountForUpdate(ctx, arg.ToAccountID)
+		//if err != nil {
+		//	return err
+		//}
+		//
+		//result.ToAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
+		//	ID:      arg.ToAccountID,
+		//	Balance: accountB.Balance + arg.Amount,
+		//})
+		//if err != nil {
+		//	return err
+		//}
+
+		result.ToAccount, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+			Amount: arg.Amount,
+			ID:     arg.ToAccountID,
+		})
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 
