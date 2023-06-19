@@ -102,6 +102,48 @@ func (s *StoreSuite) TestTransferTx() {
 
 }
 
+func (s *StoreSuite) TestTransferTxDeadlock() {
+
+	accountA, _ := s.createRandomAccount()
+	accountB, _ := s.createRandomAccount()
+
+	n := 10
+	amount := int64(10)
+	errs := make(chan error)
+
+	for i := 0; i < n; i++ {
+		fromAccountID := accountA.ID
+		toAccountID := accountB.ID
+		if i%2 == 1 {
+			fromAccountID = accountB.ID
+			toAccountID = accountA.ID
+		}
+		go func() {
+			_, err := s.store.TransferTx(context.Background(), TransferTxParams{
+				FromAccountID: fromAccountID,
+				ToAccountID:   toAccountID,
+				Amount:        amount,
+			})
+			errs <- err
+		}()
+	}
+
+	for i := 0; i < n; i++ {
+		err := <-errs
+		s.Require().NoError(err)
+	}
+
+	updatedAccountA, err := s.store.GetAccount(context.Background(), accountA.ID)
+	s.Require().NoError(err)
+
+	updatedAccountB, err := s.store.GetAccount(context.Background(), accountB.ID)
+	s.Require().NoError(err)
+
+	s.Equal(accountA.Balance, updatedAccountA.Balance)
+	s.Equal(accountB.Balance, updatedAccountB.Balance)
+
+}
+
 func TestStoreSuite(t *testing.T) {
 	suite.Run(t, new(StoreSuite))
 }
