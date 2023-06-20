@@ -4,15 +4,11 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq" // postgres driver
 	"os"
+	"simple_bank/utils"
 	"testing"
 )
 
 var testQueries *Queries
-
-const (
-	dbDriver = "postgres"
-	dbSource = "postgres://postgres:postgres@localhost:8080/simple_bank?sslmode=disable"
-)
 
 type Connection struct {
 	conn *sql.DB
@@ -31,15 +27,12 @@ func (c *Connection) GetConnection() *sql.DB {
 	return c.conn
 }
 
-//func (c *Connection) TestPostgresConnection() {
-//	err := c.conn.Ping()
-//	if err != nil {
-//		panic("cannot ping db: " + err.Error())
-//	}
-//}
-
 func TestMain(m *testing.M) {
-	conn, err := sql.Open(dbDriver, dbSource)
+	config, err := utils.LoadConfig("../")
+	if err != nil {
+		panic("cannot load config: " + err.Error())
+	}
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		panic("cannot connect to db: " + err.Error())
 	}
