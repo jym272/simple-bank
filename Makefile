@@ -17,4 +17,8 @@ migrate_up-docker:
  #    -path=/migrations/ -database postgres://localhost:5432/database up 2
 
 
-.PHONY: sqlc test migrate_up migrate_up-docker
+server:
+	@go run main.go
+
+
+.PHONY: sqlc test migrate_up migrate_up-docker server
